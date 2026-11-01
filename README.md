@@ -21,13 +21,26 @@ Tauri 2 桌面窗口，目标平台 **Windows**。前端是纯 HTML/CSS/JS，**�
 
 1. 把仓库推到 GitHub。
 2. `Actions` → `build` → 等「构建 Windows 安装包」跑完。
-3. 在该任务的 Artifacts 里下载 `InvoiceBox-windows-x64`，内含：
-   - `InvoiceBox_0.1.0_x64_en-US.msi`（MSI 安装包）
-   - `InvoiceBox_0.1.0_x64-setup.exe`（NSIS 安装包，体积更小）
+3. 在该任务的 Artifacts 里下载 `InvoiceBox-windows-x64`，内含三种形态：
 
-打 tag（例如 `git tag v0.1.0 && git push --tags`）会自动创建一个 **draft Release** 并把两个安装包附上去。
+   | 文件 | 说明 |
+   | --- | --- |
+   | `InvoiceBox-portable.exe` | **便携版**，单个 exe，双击直接打开，不用安装 |
+   | `InvoiceBox_0.1.0_x64-setup.exe` | NSIS 安装包，体积最小，会建快捷方式 |
+   | `InvoiceBox_0.1.0_x64_en-US.msi` | MSI 安装包，适合批量部署 |
 
-构建流程见 [`.github/workflows/build.yml`](.github/workflows/build.yml)：`npm install` → `npx tauri icon` 生成全套图标 → `cargo test` → `tauri build --bundles msi,nsis` → 上传产物。
+### 便携版怎么用
+
+`InvoiceBox-portable.exe` 就是完整程序，拷到任何位置双击即可运行。
+
+- 默认配置与发票存在 `%APPDATA%\com.invoicebox.desktop\`（和安装版共用一份数据）。
+- 想做成真正绿色版（数据跟着 exe 走，可放 U 盘）：在 exe **同目录**放一个空文件 `portable`，程序会自动改用 `exe目录\InvoiceBoxData\` 保存配置、清单和 PDF；侧边栏会显示「便携模式」。
+- 依赖系统自带的 **WebView2** 运行时：Windows 11 和 Win10 21H2+ 已内置；更老的系统先装一次 [Microsoft Edge WebView2 Runtime](https://developer.microsoft.com/microsoft-edge/webview2/)。
+- 未签名，首次运行 SmartScreen 会提示「更多信息 → 仍要运行」。
+
+打 tag（例如 `git tag v0.1.0 && git push --tags`）会自动创建一个 **draft Release**，把便携版 exe 与两个安装包一起附上去。
+
+构建流程见 [`.github/workflows/build.yml`](.github/workflows/build.yml)：`npm install` → `npx tauri icon` 生成全套图标 → `cargo test` → `tauri build --bundles msi,nsis` → 复制出便携版 exe → 上传产物。
 
 ## 本地开发（可选，仅调试需要）
 
@@ -84,9 +97,10 @@ cargo test --manifest-path src-tauri/Cargo.toml
 
 侧边栏「打开数据目录」可直达。
 
-| 内容 | 路径 |
+| 形态 | 数据位置 |
 | --- | --- |
-| Windows 全部数据 | `%APPDATA%\com.invoicebox.desktop\` |
+| 安装版 / 默认便携版 | `%APPDATA%\com.invoicebox.desktop\` |
+| 绿色便携模式（exe 旁放了 `portable`） | `exe所在目录\InvoiceBoxData\` |
 
 目录内容：
 

@@ -13,6 +13,7 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
+            commands::app_info,
             commands::load_config,
             commands::save_config,
             commands::test_connection,

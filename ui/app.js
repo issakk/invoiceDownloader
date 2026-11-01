@@ -5,6 +5,7 @@ const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 
 const state = {
   config: null,
+  info: null,
   invoices: [],
   selected: new Set(),
   dirty: new Map(),
@@ -496,6 +497,24 @@ function bindEvents() {
     await deleteInvoices(hashes);
   });
 
+  $('#btn-copy-info').addEventListener('click', async () => {
+    const info = state.info;
+    const lines = [
+      `模式：${info?.portable ? '便携' : '标准'}`,
+      `数据目录：${info?.dataDir ?? '未知'}`,
+      `平台：${navigator.userAgent}`,
+      `服务器：${$('#imapHost').value || '未填写'}:${$('#imapPort').value || '-'} (${$('#imapTls').value})`,
+      `文件夹：${$('#folder').value || 'INBOX'}`,
+      `测试结果：${$('#test-output').textContent.trim()}`,
+    ];
+    try {
+      await navigator.clipboard.writeText(lines.join(String.fromCharCode(10)));
+      toast('已复制排错信息', 'ok');
+    } catch (error) {
+      toast(`复制失败：${errorText(error)}`, 'error');
+    }
+  });
+
   $('#btn-open-dir').addEventListener('click', () => {
     invoke('open_data_dir').catch((error) => toast(`打开失败：${errorText(error)}`, 'error'));
   });
@@ -516,6 +535,16 @@ function bindEvents() {
     });
   } catch (error) {
     console.warn('事件监听失败', error);
+  }
+  try {
+    state.info = await invoke('app_info');
+    const info = $('#mode-info');
+    info.innerHTML = state.info.portable
+      ? '便携模式 · 数据在程序目录<br />不上传任何服务器'
+      : '凭证仅保存在本机<br />不上传任何服务器';
+    info.title = `数据目录：${state.info.dataDir}`;
+  } catch (error) {
+    console.warn('读取运行信息失败', error);
   }
   try {
     const config = await invoke('load_config');

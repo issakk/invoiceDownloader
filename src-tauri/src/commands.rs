@@ -28,6 +28,22 @@ pub struct SyncReport {
     invoices: Vec<Invoice>,
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AppInfo {
+    portable: bool,
+    data_dir: String,
+}
+
+/// 前端用来显示「便携模式 / 标准模式」以及数据实际位置
+#[tauri::command]
+pub fn app_info(app: AppHandle) -> Result<AppInfo, String> {
+    Ok(AppInfo {
+        portable: config::portable_root().is_some(),
+        data_dir: config::data_dir(&app)?.to_string_lossy().to_string(),
+    })
+}
+
 #[tauri::command]
 pub fn load_config(app: AppHandle) -> Result<Config, String> {
     config::load(&app)

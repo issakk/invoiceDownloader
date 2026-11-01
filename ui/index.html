@@ -30,7 +30,7 @@
 
       <div class="side-foot">
         <button id="btn-open-dir" class="ghost small">打开数据目录</button>
-        <p>凭证仅保存在本机<br />不上传任何服务器</p>
+        <p id="mode-info">凭证仅保存在本机<br />不上传任何服务器</p>
       </div>
     </aside>
 
@@ -218,7 +218,10 @@
         </form>
 
         <div class="panel">
-          <div class="panel-head"><h2>连接测试结果</h2></div>
+          <div class="panel-head">
+            <h2>连接测试结果</h2>
+            <button id="btn-copy-info" class="ghost small">复制排错信息</button>
+          </div>
           <pre id="test-output" class="log short">还没有测试过。</pre>
         </div>
       </section>

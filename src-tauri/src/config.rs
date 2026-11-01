@@ -68,21 +68,53 @@ impl Config {
     }
 }
 
+fn exe_dir() -> Option<PathBuf> {
+    std::env::current_exe()
+        .ok()?
+        .parent()
+        .map(|dir| dir.to_path_buf())
+}
+
+/// 便携模式：exe 同目录放了 `portable` 标记文件，或设置了 `INVOICEBOX_PORTABLE=1`，
+/// 配置、清单和 PDF 都存到 exe 旁边的 `InvoiceBoxData`，整个程序可以放 U 盘里带走。
+pub fn portable_root() -> Option<PathBuf> {
+    if std::env::var("INVOICEBOX_PORTABLE").is_ok_and(|v| v == "1") {
+        return Some(exe_dir()?.join("InvoiceBoxData"));
+    }
+    let dir = exe_dir()?;
+    let marked = ["portable", "portable.txt", "InvoiceBox.portable"]
+        .iter()
+        .any(|marker| dir.join(marker).exists());
+    marked.then(|| dir.join("InvoiceBoxData"))
+}
+
+fn ensure(dir: &PathBuf, what: &str) -> Result<(), String> {
+    fs::create_dir_all(dir).map_err(|e| format!("创建{what}失败: {e}"))
+}
+
 pub fn config_dir(app: &AppHandle) -> Result<PathBuf, String> {
+    if let Some(root) = portable_root() {
+        ensure(&root, "配置目录")?;
+        return Ok(root);
+    }
     let dir = app
         .path()
         .app_config_dir()
         .map_err(|e| format!("无法定位配置目录: {e}"))?;
-    fs::create_dir_all(&dir).map_err(|e| format!("创建配置目录失败: {e}"))?;
+    ensure(&dir, "配置目录")?;
     Ok(dir)
 }
 
 pub fn data_dir(app: &AppHandle) -> Result<PathBuf, String> {
+    if let Some(root) = portable_root() {
+        ensure(&root, "数据目录")?;
+        return Ok(root);
+    }
     let dir = app
         .path()
         .app_data_dir()
         .map_err(|e| format!("无法定位数据目录: {e}"))?;
-    fs::create_dir_all(&dir).map_err(|e| format!("创建数据目录失败: {e}"))?;
+    ensure(&dir, "数据目录")?;
     Ok(dir)
 }
 
