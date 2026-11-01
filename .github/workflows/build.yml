@@ -41,6 +41,7 @@ jobs:
             libxdo-dev \
             libssl-dev \
             patchelf \
+            rpm \
             build-essential \
             file
 
