@@ -1,0 +1,41 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "InvoiceBox",
+  "version": "0.1.0",
+  "identifier": "com.invoicebox.desktop",
+  "build": {
+    "frontendDist": "../ui"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "InvoiceBox · 发票收取助手",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 980,
+        "minHeight": 640,
+        "resizable": true,
+        "center": true,
+        "theme": "Dark"
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "category": "Productivity",
+    "shortDescription": "从邮箱批量抓取 PDF 发票并按规则重命名",
+    "longDescription": "InvoiceBox 通过 IMAP 收取邮件，自动识别 PDF 附件与邮件正文中的发票下载链接，提取日期/金额/销售方/发票号并按模板批量重命名导出。"
+  }
+}

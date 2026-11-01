@@ -1,0 +1,30 @@
+[package]
+name = "invoicebox"
+version = "0.1.0"
+description = "InvoiceBox - 从邮箱批量抓取 PDF 发票并按规则重命名"
+edition = "2021"
+rust-version = "1.77"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+imap = "2.4"
+native-tls = "0.2"
+mail-parser = "0.9"
+pdf-extract = "0.12"
+regex = "1"
+sha2 = "0.10"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls", "gzip", "brotli", "deflate"] }
+
+[profile.release]
+strip = true
+lto = "thin"
+codegen-units = 1
+# panic = "abort" 会禁用 catch_unwind，PDF 解析崩溃会导致整个程序退出，故不启用

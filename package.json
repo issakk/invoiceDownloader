@@ -1,0 +1,15 @@
+{
+  "name": "invoicebox",
+  "private": true,
+  "version": "0.1.0",
+  "description": "InvoiceBox - 从邮箱批量抓取 PDF 发票并按规则重命名",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "icon": "tauri icon assets/icon.svg",
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.12.4"
+  }
+}

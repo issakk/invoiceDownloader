@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>InvoiceBox</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">IB</div>
+        <div class="brand-text">
+          <strong>InvoiceBox</strong>
+          <span>发票收取助手</span>
+        </div>
+      </div>
+
+      <nav id="nav">
+        <button class="nav-item active" data-view="sync">
+          <span class="ico">↓</span>收信
+        </button>
+        <button class="nav-item" data-view="library">
+          <span class="ico">▤</span>发票库<span id="count-badge" class="badge">0</span>
+        </button>
+        <button class="nav-item" data-view="settings">
+          <span class="ico">⚙</span>设置
+        </button>
+      </nav>
+
+      <div class="side-foot">
+        <button id="btn-open-dir" class="ghost small">打开数据目录</button>
+        <p>凭证仅保存在本机<br />不上传任何服务器</p>
+      </div>
+    </aside>
+
+    <main>
+      <!-- 收信 -->
+      <section id="view-sync" class="view active">
+        <header class="view-head">
+          <div>
+            <h1>收信</h1>
+            <p class="sub">扫描邮箱里的 PDF 附件与发票下载链接，自动落库并命名</p>
+          </div>
+          <button id="btn-sync" class="primary">开始收取发票</button>
+        </header>
+
+        <div class="cards">
+          <div class="card">
+            <span class="label">邮箱服务器</span>
+            <strong id="sum-host">未配置</strong>
+          </div>
+          <div class="card">
+            <span class="label">扫描文件夹</span>
+            <strong id="sum-folder">INBOX</strong>
+          </div>
+          <div class="card">
+            <span class="label">时间范围</span>
+            <strong id="sum-range">最近 90 天</strong>
+          </div>
+          <div class="card">
+            <span class="label">命名模板</span>
+            <strong id="sum-template" class="mono">{date}_{amount}_{seller}_{no}</strong>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2>运行日志</h2>
+            <div class="panel-actions">
+              <span id="sync-state" class="pill">待机</span>
+              <button id="btn-clear-log" class="ghost small">清空</button>
+            </div>
+          </div>
+          <div id="progress" class="progress hidden"><div class="progress-bar"></div></div>
+          <pre id="log" class="log"></pre>
+        </div>
+
+        <div id="sync-summary" class="summary hidden"></div>
+      </section>
+
+      <!-- 发票库 -->
+      <section id="view-library" class="view">
+        <header class="view-head">
+          <div>
+            <h1>发票库</h1>
+            <p class="sub">双击字段可直接修改，改完点「按模板重命名」应用</p>
+          </div>
+          <div class="head-actions">
+            <button id="btn-export-csv" class="ghost">导出清单 CSV</button>
+            <button id="btn-export" class="primary">导出选中</button>
+          </div>
+        </header>
+
+        <div class="toolbar">
+          <input id="search" class="input" type="search" placeholder="搜索销售方 / 发票号 / 文件名…" />
+          <div class="template-box">
+            <span class="label">命名模板</span>
+            <input id="template" class="input mono" value="{date}_{amount}_{seller}_{no}" />
+          </div>
+          <button id="btn-rename" class="ghost">按模板重命名</button>
+          <button id="btn-delete" class="danger ghost">删除</button>
+        </div>
+
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th class="col-check"><input id="check-all" type="checkbox" /></th>
+                <th>文件名</th>
+                <th class="col-date">日期</th>
+                <th class="col-amount">金额</th>
+                <th>销售方</th>
+                <th class="col-no">发票号</th>
+                <th class="col-source">来源</th>
+                <th class="col-act">操作</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+          <div id="empty" class="empty">
+            <p>还没有发票。去「收信」跑一次，或先在「设置」里填好邮箱。</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 设置 -->
+      <section id="view-settings" class="view">
+        <header class="view-head">
+          <div>
+            <h1>设置</h1>
+            <p class="sub">QQ / 163 / Gmail 都需要「授权码」而不是登录密码</p>
+          </div>
+          <div class="head-actions">
+            <button id="btn-test" class="ghost">测试连接</button>
+            <button id="btn-save" class="primary">保存配置</button>
+          </div>
+        </header>
+
+        <div class="presets">
+          <span class="label">快速填充</span>
+          <button class="chip" data-host="imap.qq.com" data-port="993">QQ 邮箱</button>
+          <button class="chip" data-host="imap.163.com" data-port="993">163</button>
+          <button class="chip" data-host="imap.126.com" data-port="993">126</button>
+          <button class="chip" data-host="imap.gmail.com" data-port="993">Gmail</button>
+          <button class="chip" data-host="outlook.office365.com" data-port="993">Outlook</button>
+          <button class="chip" data-host="imap.mail.me.com" data-port="993">iCloud</button>
+        </div>
+
+        <form id="form" class="form" autocomplete="off">
+          <fieldset>
+            <legend>邮箱连接</legend>
+            <div class="grid2">
+              <label>
+                <span>IMAP 服务器</span>
+                <input id="imapHost" class="input" placeholder="imap.qq.com" />
+              </label>
+              <label>
+                <span>端口</span>
+                <input id="imapPort" class="input" type="number" min="1" max="65535" placeholder="993" />
+              </label>
+              <label>
+                <span>加密方式</span>
+                <select id="imapTls" class="input">
+                  <option value="tls">SSL / TLS（993）</option>
+                  <option value="starttls">STARTTLS（143）</option>
+                </select>
+              </label>
+              <label>
+                <span>邮箱账号</span>
+                <input id="username" class="input" placeholder="you@qq.com" />
+              </label>
+              <label class="span2">
+                <span>授权码 / 应用专用密码</span>
+                <div class="row">
+                  <input id="password" class="input" type="password" placeholder="邮箱设置里生成的授权码" />
+                  <button type="button" id="btn-eye" class="ghost small">显示</button>
+                </div>
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>收取规则</legend>
+            <div class="grid2">
+              <label>
+                <span>扫描文件夹</span>
+                <input id="folder" class="input" placeholder="INBOX" />
+              </label>
+              <label>
+                <span>扫描最近多少天</span>
+                <input id="sinceDays" class="input" type="number" min="1" max="3650" />
+              </label>
+              <label>
+                <span>单次最多处理邮件数</span>
+                <input id="maxMails" class="input" type="number" min="1" max="5000" />
+              </label>
+              <label>
+                <span>每封邮件尝试下载链接数（0 = 不跟随）</span>
+                <input id="maxLinksPerMail" class="input" type="number" min="0" max="10" />
+              </label>
+              <label class="span2">
+                <span>关键字过滤（逗号分隔，留空 = 不过滤）</span>
+                <input id="keywordFilter" class="input" placeholder="发票, invoice, 账单" />
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>命名规则</legend>
+            <label>
+              <span>模板（可用占位符：{date} {amount} {seller} {no} {from} {subject} {kind}）</span>
+              <input id="namingTemplate" class="input mono" value="{date}_{amount}_{seller}_{no}" />
+            </label>
+            <p class="preview">预览：<code id="template-preview" class="mono"></code></p>
+            <p class="hint">解析不到的字段会自动省略，不会留下双下划线。</p>
+          </fieldset>
+        </form>
+
+        <div class="panel">
+          <div class="panel-head"><h2>连接测试结果</h2></div>
+          <pre id="test-output" class="log short">还没有测试过。</pre>
+        </div>
+      </section>
+    </main>
+
+    <div id="toast" class="toast"></div>
+    <script src="app.js"></script>
+  </body>
+</html>
