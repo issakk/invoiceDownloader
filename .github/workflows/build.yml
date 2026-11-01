@@ -11,39 +11,12 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    name: 构建 ${{ matrix.label }}
-    runs-on: ${{ matrix.platform }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: windows-latest
-            label: windows-x64
-          - platform: macos-latest
-            label: macos-arm64
-          - platform: macos-13
-            label: macos-x64
-          - platform: ubuntu-22.04
-            label: linux-x64
+  windows:
+    name: 构建 Windows 安装包
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: 安装 Linux 系统依赖
-        if: matrix.platform == 'ubuntu-22.04'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libwebkit2gtk-4.1-dev \
-            libappindicator3-dev \
-            librsvg2-dev \
-            libxdo-dev \
-            libssl-dev \
-            patchelf \
-            rpm \
-            build-essential \
-            file
 
       - uses: actions/setup-node@v4
         with:
@@ -62,21 +35,21 @@ jobs:
       - name: 生成应用图标
         run: npx tauri icon assets/icon.svg
 
+      - name: 运行单元测试
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+
       - name: 编译并打包
-        run: npm run build
+        run: npm run build -- --bundles msi,nsis
 
       - name: 上传构建产物
         uses: actions/upload-artifact@v4
         with:
-          name: InvoiceBox-${{ matrix.label }}
+          name: InvoiceBox-windows-x64
           if-no-files-found: error
           retention-days: 30
           path: |
             src-tauri/target/release/bundle/msi/*.msi
             src-tauri/target/release/bundle/nsis/*.exe
-            src-tauri/target/release/bundle/dmg/*.dmg
-            src-tauri/target/release/bundle/deb/*.deb
-            src-tauri/target/release/bundle/appimage/*.AppImage
 
       - name: 发布到 GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
@@ -87,6 +60,3 @@ jobs:
           files: |
             src-tauri/target/release/bundle/msi/*.msi
             src-tauri/target/release/bundle/nsis/*.exe
-            src-tauri/target/release/bundle/dmg/*.dmg
-            src-tauri/target/release/bundle/deb/*.deb
-            src-tauri/target/release/bundle/appimage/*.AppImage

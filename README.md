@@ -2,7 +2,7 @@
 
 用 IMAP 收邮件 → 自动抓出 PDF 发票（**附件** + **正文里的下载链接**）→ 解析日期 / 金额 / 销售方 / 发票号 → 按模板**批量重命名**、**批量导出**。
 
-Tauri 2 桌面窗口（Windows / macOS / Linux）。前端是纯 HTML/CSS/JS，**没有前端打包步骤**；Rust 与安装包全部由 **GitHub Actions** 编译，本机不需要装 Rust。
+Tauri 2 桌面窗口，目标平台 **Windows**。前端是纯 HTML/CSS/JS，**没有前端打包步骤**；Rust 与安装包全部由 **GitHub Actions** 编译，本机不需要装 Rust。
 
 ## 功能一览
 
@@ -17,21 +17,17 @@ Tauri 2 桌面窗口（Windows / macOS / Linux）。前端是纯 HTML/CSS/JS，*
 | 批量 | 勾选后批量重命名（磁盘文件同步改名）、批量导出到指定文件夹、导出 CSV 清单、批量删除 |
 | 微调 | 表格内直接改日期 / 金额 / 销售方 / 发票号，改完点「按模板重命名」即可生效 |
 
-## 用 GitHub Actions 构建（推荐，本机零编译）
+## 用 GitHub Actions 构建（本机零编译）
 
 1. 把仓库推到 GitHub。
-2. `Actions` → `build` → 等 4 个平台的矩阵任务跑完。
-3. 在对应任务的 Artifacts 里下载安装包：
+2. `Actions` → `build` → 等「构建 Windows 安装包」跑完。
+3. 在该任务的 Artifacts 里下载 `InvoiceBox-windows-x64`，内含：
+   - `InvoiceBox_0.1.0_x64_en-US.msi`（MSI 安装包）
+   - `InvoiceBox_0.1.0_x64-setup.exe`（NSIS 安装包，体积更小）
 
-| 平台 | 产物 |
-| --- | --- |
-| `windows-x64` | `src-tauri/target/release/bundle/msi/*.msi`、`nsis/*-setup.exe` |
-| `macos-arm64` / `macos-x64` | `bundle/dmg/*.dmg` |
-| `linux-x64` | `bundle/deb/*.deb`、`appimage/*.AppImage` |
+打 tag（例如 `git tag v0.1.0 && git push --tags`）会自动创建一个 **draft Release** 并把两个安装包附上去。
 
-打 tag（例如 `git tag v0.1.0 && git push --tags`）会自动创建一个 **draft Release** 并把各平台产物附上去。
-
-构建流程见 [`.github/workflows/build.yml`](.github/workflows/build.yml)：装 Linux 依赖 → `npm install` → `npx tauri icon` 生成全套图标 → `npm run build` → 上传产物。
+构建流程见 [`.github/workflows/build.yml`](.github/workflows/build.yml)：`npm install` → `npx tauri icon` 生成全套图标 → `cargo test` → `tauri build --bundles msi,nsis` → 上传产物。
 
 ## 本地开发（可选，仅调试需要）
 
@@ -88,11 +84,9 @@ cargo test --manifest-path src-tauri/Cargo.toml
 
 侧边栏「打开数据目录」可直达。
 
-| 系统 | 目录 |
+| 内容 | 路径 |
 | --- | --- |
-| Windows | `%APPDATA%\com.invoicebox.desktop\` |
-| macOS | `~/Library/Application Support/com.invoicebox.desktop/` |
-| Linux | `~/.config/com.invoicebox.desktop/`（配置）、`~/.local/share/com.invoicebox.desktop/`（发票） |
+| Windows 全部数据 | `%APPDATA%\com.invoicebox.desktop\` |
 
 目录内容：
 
@@ -107,6 +101,7 @@ cargo test --manifest-path src-tauri/Cargo.toml
 - **加密 PDF**（需要打开密码）无法提取文本。
 - **需要登录态 / 验证码 / 手机号的下载链接**取不到：只支持匿名可访问的直链。
 - 只实现 SSL/TLS 与 STARTTLS，不提供明文 IMAP。
+- CI 只产出 Windows 安装包（MSI + NSIS）。
 - 中文发票版式差异大，字段解析是启发式规则；识别不准就在表格里改，再重命名。
 - 构建产物**未签名**：Windows SmartScreen、macOS Gatekeeper 会提示，需要手动放行。
 
@@ -132,7 +127,7 @@ cargo test --manifest-path src-tauri/Cargo.toml
 │       ├── invoice.rs           # 落库流水线 + 命名模板渲染
 │       ├── store.rs             # invoices.json 清单与去重
 │       └── util.rs              # 文件名净化 / 哈希 / 日期
-└── .github/workflows/build.yml  # 四平台矩阵构建 + Release
+└── .github/workflows/build.yml  # Windows 安装包构建 + Release
 ```
 
 ## 排错
